@@ -3,6 +3,11 @@ from pathlib import Path
 from typing import List
 
 def import_annotations(file_path: str) -> dict:
+    """
+    Import annotations from a JSON file
+    :param str file_path: Path to COCO annotations JSON file
+    :return dict: JSON data imported into dictionary
+    """
     json_file = Path(file_path)
     with open(json_file) as annotations:
         json_contents = json.load(annotations)
@@ -10,6 +15,11 @@ def import_annotations(file_path: str) -> dict:
     return json_contents
 
 def extract_image_ids(json_contents: dict) -> set:
+    """
+    Grabs IDs of images with only one annotation
+    :param dict json_contents: Imported COCO JSON data
+    :return set: Set of IDs of images that only have one image
+    """
     image_ids = []
     for annotation in json_contents["annotations"]:
         image_id = annotation["image_id"]
@@ -21,7 +31,13 @@ def extract_image_ids(json_contents: dict) -> set:
     return set(image_ids)
 
 
-def get_links(id_set: set, json_contents: dict) -> List[tuple]:
+def get_links(id_set: set | list, json_contents: dict) -> List[tuple]:
+    """
+    Gets the links associated with images in an ID set or list
+    :param set | list id_set: Set or list of image IDs to grab
+    :param dict json_contents: Imported JSON contents
+    :return List[tuple]: A list of tuples in the format (jpg_link, png_link)
+    """
     images = []
     for image in json_contents["images"]:
         if image["id"] in id_set:
