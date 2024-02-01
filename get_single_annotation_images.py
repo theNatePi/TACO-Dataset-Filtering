@@ -20,15 +20,17 @@ def extract_image_ids(json_contents: dict) -> set:
     :param dict json_contents: Imported COCO JSON data
     :return set: Set of IDs of images that only have one image
     """
-    image_ids = []
+    unique_image_ids = []
+    multiple_annotations_ids = []
     for annotation in json_contents["annotations"]:
         image_id = annotation["image_id"]
-        if image_id in image_ids:
-            image_ids.remove(image_id)
-        else:
-            image_ids.append(image_id)
+        if image_id in unique_image_ids:
+            unique_image_ids.remove(image_id)
+            multiple_annotations_ids.append(image_id)
+        elif image_id not in multiple_annotations_ids:
+            unique_image_ids.append(image_id)
 
-    return set(image_ids)
+    return set(unique_image_ids)
 
 
 def get_links(id_set: set | list, json_contents: dict) -> List[tuple]:
@@ -48,7 +50,7 @@ def get_links(id_set: set | list, json_contents: dict) -> List[tuple]:
     return images
 
 
-def get_supercategory_proportions(id_set: set | list, json_contents: dict) -> dict:
+def get_subcategory_proportions(id_set: set | list, json_contents: dict) -> dict:
     """
     Returns the proportions of every img class within the single-class imgs
     :param set | list id_set: Set or list of image IDs to grab
@@ -56,8 +58,8 @@ def get_supercategory_proportions(id_set: set | list, json_contents: dict) -> di
     :return dict: A descending sorted dict of image superclass as the key and proportion as the value
     """
     # Get image category name from "categories", "annotations" within annotations.json
-    supercategory_props = dict()
-    category_id_to_supercategory = {category["id"]: category["supercategory"] for category in json_contents["categories"]}
+    subcategory_props = dict()
+    category_id_to_subcategory = {category["id"]: category["supercategory"] for category in json_contents["categories"]}
 
     for annotation in json_contents["annotations"]:
         image_id = annotation["image_id"]
@@ -65,22 +67,52 @@ def get_supercategory_proportions(id_set: set | list, json_contents: dict) -> di
 
         if image_id in id_set:
             # Update supercategory_frequencies
-            supercategory = category_id_to_supercategory[category_id]
-            supercategory_props[supercategory] = supercategory_props.get(supercategory, 0) + 1
+            supercategory = category_id_to_subcategory[category_id]
+            subcategory_props[supercategory] = subcategory_props.get(supercategory, 0) + 1
     
-    for key, value in supercategory_props.items():
-        supercategory_props[key] = value / len(id_set)
+    for key, value in subcategory_props.items():
+        subcategory_props[key] = value / len(id_set)
     
-    supercategory_props = dict(sorted(supercategory_props.items(), key=lambda item: item[1], reverse=True))
+    subcategory_props = dict(sorted(subcategory_props.items(), key=lambda item: item[1], reverse=True))
 
-    return supercategory_props
+    return subcategory_props
 
 
+def generate_annotations_json_from_ids(id_set: set | list, json_contents: dict) -> dict:
+    output_json = {"info": json_contents["info"],
+                   "scene_annotations": json_contents["scene_annotations"],
+                   "licenses": json_contents["licenses"], "categories": json_contents["categories"],
+                   "scene_categories": json_contents["scene_categories"], "annotations": [],
+                   "images": []}
+
+    for image in json_contents["images"]:
+        if image["id"] in id_set:
+            output_json["images"].append(image)
+    
+    for annotation in json_contents["annotations"]:
+        if annotation["image_id"] in id_set:
+            output_json["annotations"].append(annotation)
+            
+    return output_json
 
 
 if __name__ == "__main__":
     json_data = import_annotations("./data/annotations.json")
     image_ids = extract_image_ids(json_data)
+
+    # Information about the number and ids of images with 1 annotation:
     # print(image_ids)
     # print(get_links(image_ids, json_data))
-    print(get_supercategory_proportions(image_ids, json_data))
+
+    # ------
+
+    # Information about the proportions of super categories in one annotation images
+    print(get_subcategory_proportions(image_ids, json_data))
+
+    # ------
+
+    # Get the annotations_json file from one annotation image ids
+
+    # print(generate_annotations_json_from_ids(image_ids, json_data))
+    # correct_annotations = generate_annotations_json_from_ids(image_ids, json_data)
+    # print(correct_annotations)
