@@ -107,7 +107,7 @@ if __name__ == "__main__":
     # ------
 
     # Information about the proportions of super categories in one annotation images
-    print(get_subcategory_proportions(image_ids, json_data))
+    # print(get_subcategory_proportions(image_ids, json_data))
 
     # ------
 
