@@ -48,8 +48,39 @@ def get_links(id_set: set | list, json_contents: dict) -> List[tuple]:
     return images
 
 
+def get_supercategory_proportions(id_set: set | list, json_contents: dict) -> dict:
+    """
+    Returns the proportions of every img class within the single-class imgs
+    :param set | list id_set: Set or list of image IDs to grab
+    :param dict json_contents: Imported JSON contents
+    :return dict: A descending sorted dict of image superclass as the key and proportion as the value
+    """
+    # Get image category name from "categories", "annotations" within annotations.json
+    supercategory_props = dict()
+    category_id_to_supercategory = {category["id"]: category["supercategory"] for category in json_contents["categories"]}
+
+    for annotation in json_contents["annotations"]:
+        image_id = annotation["image_id"]
+        category_id = annotation["category_id"]
+
+        if image_id in id_set:
+            # Update supercategory_frequencies
+            supercategory = category_id_to_supercategory[category_id]
+            supercategory_props[supercategory] = supercategory_props.get(supercategory, 0) + 1
+    
+    for key, value in supercategory_props.items():
+        supercategory_props[key] = value / len(id_set)
+    
+    supercategory_props = dict(sorted(supercategory_props.items(), key=lambda item: item[1], reverse=True))
+
+    return supercategory_props
+
+
+
+
 if __name__ == "__main__":
     json_data = import_annotations("./data/annotations.json")
     image_ids = extract_image_ids(json_data)
-    print(image_ids)
-    print(get_links(image_ids, json_data))
+    # print(image_ids)
+    # print(get_links(image_ids, json_data))
+    print(get_supercategory_proportions(image_ids, json_data))
