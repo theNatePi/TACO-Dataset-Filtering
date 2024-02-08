@@ -1,5 +1,5 @@
 # TACO Dataset Filtering
-A small set of tools to filter the [TACO](https://paperswithcode.com/dataset/taco) image set for waste recognition.
+A small set of tools to filter the [TACO](https://paperswithcode.com/dataset/taco) image set for computer vision waste recognition.
 
 # Purpose
 As [highlighted by Roboflow](https://arc.net/l/quote/qcuozwcj), it is important to incorporate images with single annotations, as well as [null images](https://arc.net/l/quote/dmgsyvks), into datasets for computer vision models. This allows for more rapid development, easier debugging, and more accurate models. This repository is meant to give some tools for filtering the TACO dataset to provide these types of images for training.
